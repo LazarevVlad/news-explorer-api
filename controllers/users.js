@@ -55,6 +55,20 @@ module.exports.login = (req, res, next) => {
 module.exports.getInfoUser = (req, res, next) => {
   user
     .findById(req.user._id)
-    .then((info) => res.send({ data: [info.email, info.name] }))
+    .then((info) => res.send({ email: info.email, name: info.name }))
     .catch(next);
+};
+
+module.exports.logOut = (req, res, next) => {
+  try {
+    res.cookie('jwt', '', {
+      maxAge: -1,
+    });
+    res.status(200).send({ message: 'Cookie deleted' });
+  } catch (e) {
+    const err = new Error('Ошибка сервера');
+    err.statusCode = 500;
+
+    next(err);
+  }
 };

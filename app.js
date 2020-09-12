@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 const users = require('./routes/users');
@@ -16,6 +17,19 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
+const whiteList = ['http://localhost:8080', 'http://findnews.gq'];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whiteList.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
 mongoose.connect('mongodb://localhost:27017/newsdb', {
   useNewUrlParser: true,
   useCreateIndex: true,
@@ -25,7 +39,7 @@ mongoose.connect('mongodb://localhost:27017/newsdb', {
 
 app.use(bodyParser.json());
 app.use(cookieParser());
-
+app.use(cors(corsOptions));
 app.use(requestLogger);
 
 app.post(
@@ -53,12 +67,14 @@ app.use(auth);
 app.use('/users', users);
 app.use('/articles', articles);
 
-app.use(errorLogger);
-
 app.use(() => {
   throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
+
+app.use(errorLogger);
+
 app.use(errors());
+
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 

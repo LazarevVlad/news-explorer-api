@@ -64,6 +64,9 @@ module.exports.logOut = (req, res, next) => {
   try {
     res.cookie('jwt', '', {
       maxAge: -1,
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
     });
     res.status(200).send({ message: 'Cookie deleted' });
   } catch (e) {
